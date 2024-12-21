@@ -1,3 +1,14 @@
+let channel; // Will store the Pusher channel instance
+
+  // Game state variables
+  let isHost = false;
+  let playerName = '';
+  let myBingoCard = [];
+  let drawnNumbers = new Set();
+  let gameActive = false;
+  let currentRoom = '';
+  let playerId = 'player-' + Math.random().toString(36).substring(2, 9);
+
 const pusher = new Pusher('9a5bf8582cf1d033c816', {
     cluster: 'ap1',
     forceTLS: true,
@@ -9,16 +20,7 @@ const pusher = new Pusher('9a5bf8582cf1d033c816', {
         }
     }
 });
-let channel; // Will store the Pusher channel instance
 
-  // Game state variables
-  let isHost = false;
-  let playerName = '';
-  let myBingoCard = [];
-  let drawnNumbers = new Set();
-  let gameActive = false;
-  let currentRoom = '';
-  let playerId = 'player-' + Math.random().toString(36).substring(2, 9);
   // DOM Elements
   const hostControls = document.getElementById('hostControls');
   const playerView = document.getElementById('playerView');
@@ -42,6 +44,13 @@ let channel; // Will store the Pusher channel instance
   const roomInput = document.getElementById('roomInput'); // Add this input to your HTML
   const createRoomBtn = document.getElementById('createRoom'); // Add this button to your HTML
   const joinRoomBtn = document.getElementById('joinRoom'); // Add this button to your HTML
+
+function updatePusherAuth() {
+    pusher.config.auth.params = {
+        userId: playerId,
+        userName: playerName
+    };
+}
   // Add connection handling
 pusher.connection.bind('connected', () => {
     console.log('Connected to Pusher');
@@ -51,10 +60,9 @@ pusher.connection.bind('error', (err) => {
     console.error('Pusher connection error:', err);
 });
   function initializePusher(roomCode) {
-      pusher.config.auth.params = {
-        userId: playerId,
-        userName: playerName
-    };
+    // Update auth params before subscribing
+    updatePusherAuth();
+
     // Unsubscribe from previous channel if exists
     if (channel) {
         pusher.unsubscribe(`presence-room-${currentRoom}`);
@@ -225,6 +233,7 @@ pusher.connection.bind('error', (err) => {
   createRoomBtn.addEventListener('click', async () => {
     playerName = playerNameInput.value.trim();
     if (playerName) {
+        updatePusherAuth(); // Update auth params
         try {
             const response = await fetch('/api/create-room', {
                 method: 'POST',
@@ -253,11 +262,11 @@ pusher.connection.bind('error', (err) => {
     }
 });
 
-  
 joinRoomBtn.addEventListener('click', async () => {
     playerName = playerNameInput.value.trim();
     const roomCode = roomInput.value.trim();
     if (playerName && roomCode) {
+        updatePusherAuth(); // Update auth params
         try {
             const response = await fetch('/api/join-room', {
                 method: 'POST',
