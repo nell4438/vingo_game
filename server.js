@@ -214,33 +214,25 @@ app.post('/api/bingo-called', (req, res) => {
 });
 
 // Pusher authentication endpoint
-// Pusher authentication endpoint
 app.post('/pusher/auth', (req, res) => {
     try {
-        // Log incoming request for debugging
-        console.log('Auth Request:', {
-            body: req.body,
-            socketId: req.body.socket_id,
-            channel: req.body.channel_name
-        });
+        console.log('Auth Request:', req.body);
 
         const socketId = req.body.socket_id;
         const channel = req.body.channel_name;
+        const auth = req.body.auth || {};
 
-        // Get user data from request body
-        const userId = req.body.auth?.params?.userId || 'anonymous';
-        const userName = req.body.auth?.params?.userName || 'Anonymous';
+        // Get user data
+        const userId = auth.params?.userId || req.body.userId || 'anonymous';
+        const userName = auth.params?.userName || req.body.userName || 'Anonymous';
 
-        // Validate required fields
         if (!socketId || !channel) {
-            console.error('Missing required fields:', { socketId, channel });
             return res.status(400).json({
-                error: 'Missing required fields',
+                error: 'Missing socket_id or channel_name',
                 details: { socketId, channel }
             });
         }
 
-        // Create presence data
         const presenceData = {
             user_id: userId,
             user_info: {
@@ -248,15 +240,8 @@ app.post('/pusher/auth', (req, res) => {
             }
         };
 
-        // Generate auth response
         const authResponse = pusher.authorizeChannel(socketId, channel, presenceData);
-
-        // Log successful auth
-        console.log('Auth Success:', {
-            channel,
-            userId,
-            userName
-        });
+        console.log('Auth Response:', authResponse);
 
         res.json(authResponse);
 
@@ -268,6 +253,7 @@ app.post('/pusher/auth', (req, res) => {
         });
     }
 });
+
 function generateRandomNumbers(min, max, count) {
     const numbers = [];
     while (numbers.length < count) {
