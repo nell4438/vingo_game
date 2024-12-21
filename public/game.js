@@ -35,6 +35,20 @@ let drawnNumbers = new Set();
 let gameActive = false;
 let channel;
 
+function getAuthOptions(roomCode) {
+    return {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        params: {
+            userId: playerId,
+            userName: playerName || 'Anonymous',
+            roomCode: roomCode
+        }
+    };
+}
+
+
 function getAuthParams() {
     return {
         userId: playerId,
@@ -46,15 +60,7 @@ const pusher = new Pusher('9a5bf8582cf1d033c816', {
     cluster: 'ap1',
     forceTLS: true,
     authEndpoint: '/pusher/auth',
-    auth: {
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        params: {
-            userId: playerId,
-            userName: 'Anonymous' // Will be updated when user enters name
-        }
-    }
+    auth: getAuthOptions()
 });
 
 function updatePusherAuth() {
@@ -73,10 +79,10 @@ pusher.connection.bind('error', (err) => {
 });
 function initializePusher(roomCode) {
     console.log(pusher)
-    pusher.config.auth.params = {
-        userId: playerId,
-        userName: playerName || 'Anonymous'
-    };
+    // pusher.config.auth.params = {
+    //     userId: playerId,
+    //     userName: playerName || 'Anonymous'
+    // };
     if (channel) {
         pusher.unsubscribe(`presence-room-${currentRoom}`);
     }
@@ -101,8 +107,7 @@ function initializePusher(roomCode) {
     channel.bind('pusher:subscription_error', (error) => {
         console.error('Subscription error:', {
             error,
-            channelName,
-            auth: pusher.config.auth.params
+            channelName
         });
     });
 
