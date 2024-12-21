@@ -7,17 +7,22 @@ const path = require('path');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*', // In production, set this to your actual domain
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize Pusher
 const pusher = new Pusher({
-    appId: process.env.PUSHER_APP_ID,
-    key: process.env.PUSHER_KEY,
-    secret: process.env.PUSHER_SECRET,
-    cluster: process.env.PUSHER_CLUSTER,
+    appId: '1915078',
+    key: '9a5bf8582cf1d033c816',
+    secret: 'bc08d1a000207fa695ad',
+    cluster: 'ap1',
     useTLS: true
 });
 
@@ -203,30 +208,66 @@ app.post('/api/bingo-called', (req, res) => {
 
 // Pusher authentication endpoint
 app.post('/pusher/auth', (req, res) => {
-    const socketId = req.body.socket_id;
-    const channel = req.body.channel_name;
-    const userId = req.body.userId || req.body.auth?.params?.userId;
-    const userName = req.body.userName || req.body.auth?.params?.userName;
-
-    // Validate the presence channel name format
-    if (!channel.startsWith('presence-room-')) {
-        return res.status(403).json({ error: 'Invalid channel' });
-    }
-
     try {
-        // Generate auth response for presence channel
+        // Log incoming request for debugging
+        console.log('Auth Request:', {
+            socketId: req.body.socket_id,
+            channel: req.body.channel_name,
+            params: req.body
+        });
+
+        const socketId = req.body.socket_id;
+        const channel = req.body.channel_name;
+
+        // Get user data from request body
+        const userId = req.body.userId || req.body.auth?.params?.userId || 'anonymous-' + Date.now();
+        const userName = req.body.userName || req.body.auth?.params?.userName || 'Anonymous';
+
+        // Validate required fields
+        if (!socketId || !channel) {
+            console.error('Missing required fields:', { socketId, channel });
+            return res.status(400).json({
+                error: 'Missing required fields',
+                details: { socketId, channel }
+            });
+        }
+
+        // Validate channel name
+        if (!channel.startsWith('presence-room-')) {
+            console.error('Invalid channel name:', channel);
+            return res.status(403).json({
+                error: 'Invalid channel name',
+                details: { channel }
+            });
+        }
+
+        // Create presence data
         const presenceData = {
             user_id: userId,
             user_info: {
-                name: userName
+                name: userName,
+                timestamp: new Date().toISOString()
             }
         };
 
-        const auth = pusher.authorizeChannel(socketId, channel, presenceData);
-        res.json(auth);
+        // Generate auth response
+        const authResponse = pusher.authorizeChannel(socketId, channel, presenceData);
+
+        // Log successful auth
+        console.log('Auth Success:', {
+            channel,
+            userId,
+            userName
+        });
+
+        res.json(authResponse);
+
     } catch (error) {
-        console.error('Auth error:', error);
-        res.status(403).json({ error: 'Unauthorized' });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            error: 'Authentication failed',
+            details: error.message
+        });
     }
 });
 function generateRandomNumbers(min, max, count) {
@@ -339,7 +380,10 @@ function verifyWin(card, drawnNumbers) {
     console.log("pattern ko dito ang tinatawag")
     return false;
 }
-
+// const PORT = process.env.PORT || 3000;
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
 // Export the server for Vercel
 module.exports = app;
 // // row and column pattern
