@@ -8,14 +8,21 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: '*', // In production, set this to your actual domain
+    origin: '*',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+console.log('Initializing Pusher with:', {
+    appId: process.env.PUSHER_APP_ID || '1915078',
+    key: process.env.PUSHER_KEY || '9a5bf8582cf1d033c816',
+    cluster: process.env.PUSHER_CLUSTER || 'ap1'
+});
 
 // Initialize Pusher
 const pusher = new Pusher({
@@ -207,21 +214,22 @@ app.post('/api/bingo-called', (req, res) => {
 });
 
 // Pusher authentication endpoint
+// Pusher authentication endpoint
 app.post('/pusher/auth', (req, res) => {
     try {
         // Log incoming request for debugging
         console.log('Auth Request:', {
+            body: req.body,
             socketId: req.body.socket_id,
-            channel: req.body.channel_name,
-            params: req.body
+            channel: req.body.channel_name
         });
 
         const socketId = req.body.socket_id;
         const channel = req.body.channel_name;
 
         // Get user data from request body
-        const userId = req.body.userId || req.body.auth?.params?.userId || 'anonymous-' + Date.now();
-        const userName = req.body.userName || req.body.auth?.params?.userName || 'Anonymous';
+        const userId = req.body.auth?.params?.userId || 'anonymous';
+        const userName = req.body.auth?.params?.userName || 'Anonymous';
 
         // Validate required fields
         if (!socketId || !channel) {
@@ -232,21 +240,11 @@ app.post('/pusher/auth', (req, res) => {
             });
         }
 
-        // Validate channel name
-        if (!channel.startsWith('presence-room-')) {
-            console.error('Invalid channel name:', channel);
-            return res.status(403).json({
-                error: 'Invalid channel name',
-                details: { channel }
-            });
-        }
-
         // Create presence data
         const presenceData = {
             user_id: userId,
             user_info: {
-                name: userName,
-                timestamp: new Date().toISOString()
+                name: userName
             }
         };
 
@@ -380,10 +378,7 @@ function verifyWin(card, drawnNumbers) {
     console.log("pattern ko dito ang tinatawag")
     return false;
 }
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
+
 // Export the server for Vercel
 module.exports = app;
 // // row and column pattern
