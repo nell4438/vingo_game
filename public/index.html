@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time BINGO Game</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+        const PUSHER_KEY = '9a5bf8582cf1d033c816';
+        const PUSHER_CLUSTER = 'ap1';
+    </script>
+    <script src="/game.js" defer></script>
+</head>
+<body>
+    <div id="app">
+    <div class="container">
+        <!-- Host Controls (initially hidden) -->
+        <div id="hostControls" class="host-section" style="display: none;">
+            <h2>BINGO Host Controls</h2>
+            <div class="draw-section">
+                <button id="drawNumber" class="btn-primary">Draw Number</button>
+                <div id="currentNumber" class="current-number">--</div>
+            </div>
+            <div class="drawn-numbers">
+                <h3>Drawn Numbers:</h3>
+                <div id="drawnNumbersList" class="numbers-list"></div>
+            </div>
+            <div class="game-controls">
+                <button id="startGame" class="btn-success">Start New Game</button>
+                <button id="resetGame" class="btn-danger">Reset Game</button>
+            </div>
+            <div class="players-list">
+                <h3>Connected Players:</h3>
+                <ul id="playersList"></ul>
+            </div>
+        </div>
+        <!-- Player View -->
+        <div id="playerView" class="player-section" style="display: none;">
+            <button id="showPatterns" class="btn-danger">Show Winning Patterns</button>
+            <div id="patternsModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Winning Patterns</h2>
+                    <div class="patterns-container"></div>
+                </div>
+            </div>
+            <h2>Your BINGO Card</h2>
+            <div class="card-controls">
+                <button id="shuffleCard" class="btn-secondary">Shuffle Card</button>
+            </div>
+            <div class="bingo-card">
+                <div class="bingo-header">
+                    <span>B</span>
+                    <span>I</span>
+                    <span>N</span>
+                    <span>G</span>
+                    <span>O</span>
+                </div>
+                <div id="bingoGrid" class="bingo-grid">
+                    <!-- Bingo grid will be generated here -->
+                </div>
+            </div>
+            <div class="game-status">
+                <h3>Last Number Drawn: <span id="lastDrawn">--</span></h3>
+                <button id="callBingo" class="btn-warning" disabled>Call BINGO!</button>
+            </div>
+        </div>
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="welcome-section">
+            <h1>Welcome to BINGO!</h1>
+            <div class="join-form">
+                <input type="text" id="playerName" placeholder="Enter your name" autocomplete="off"><br><br>
+                <input type="text" id="roomInput" placeholder="Enter room code" autocomplete="off"><br><br>
+                <button id="createRoom" class="btn-primary">Create Room</button><br><br>
+                <button id="joinRoom" class="btn-success">Join Room</button>
+                <!-- <button id="joinGame">Start Game</button> -->
+                <!-- <input type="text" id="playerName" placeholder="Enter your name" required autocomplete="off">
+                <button id="joinGame" class="btn-primary">Join Game</button> -->
+            </div>
+        </div>
+        <!-- Game Messages -->
+        <div id="gameMessages" class="game-messages"></div>
+        <!-- Chat Section -->
+        <!-- <button id="chatToggle" class="chat-toggle-btn" style="display: none;">
+            Toggle Chat
+        </button>
+        <div id="chatSection" class="chat-section" style="display: none;">
+            <div class="chat-container">
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
+                    <button id="sendMessage" class="btn-primary">Send</button>
+                </div>
+            </div>
+        </div> -->
+    </div>
+    </div>
+</body>
+
+</html>
