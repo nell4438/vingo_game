@@ -48,12 +48,14 @@ const pusher = new Pusher('9a5bf8582cf1d033c816', {
     authEndpoint: '/pusher/auth',
     auth: {
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         },
-        params: getAuthParams()
+        params: {
+            userId: playerId,
+            userName: 'Anonymous' // Will be updated when user enters name
+        }
     }
 });
-
 
 function updatePusherAuth() {
     pusher.config.auth.params = {
@@ -70,11 +72,11 @@ pusher.connection.bind('error', (err) => {
     console.error('Pusher connection error:', err);
 });
 function initializePusher(roomCode) {
-    // console.log('Initializing Pusher for room:', roomCode);
-    // pusher.config.auth.params = {
-    //     userId: playerId,
-    //     userName: playerName || 'Anonymous'
-    // };
+    console.log(pusher)
+    pusher.config.auth.params = {
+        userId: playerId,
+        userName: playerName || 'Anonymous'
+    };
     if (channel) {
         pusher.unsubscribe(`presence-room-${currentRoom}`);
     }
@@ -99,7 +101,8 @@ function initializePusher(roomCode) {
     channel.bind('pusher:subscription_error', (error) => {
         console.error('Subscription error:', {
             error,
-            channelName
+            channelName,
+            auth: pusher.config.auth.params
         });
     });
 
